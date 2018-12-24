@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"golang.org/x/text/unicode/runenames"
 )
 
 const usage = `unicodeinfo
@@ -31,15 +33,16 @@ func main() {
 
 	var index int
 	var r rune
+	var size int
 	var err error
 
 	for {
-		r, _, err = b.ReadRune()
+		r, size, err = b.ReadRune()
 		if err != nil {
 			break
 		}
-		fmt.Printf("%d: %#U\n", index, r)
-		index++
+		fmt.Printf("%d: %#U (%s)\n", index, r, runenames.Name(r))
+		index += size
 	}
 
 	if err != nil && err != io.EOF {

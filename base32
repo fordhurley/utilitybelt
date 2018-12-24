@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+"""base32 encoding based on http://www.crockford.com/wrmg/base32.html
+
+Encodes the positive integer on stdin. This tool is designed to parallel
+base64(1).
+
+Usage: base32 [-h | -D]
+  -h  print this help
+  -D  decode input instead
+"""
+
+import sys
+
+CHARS = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+
+
+def encode(num):
+    if num <= 0:
+        sys.stderr.write('num must be greater than 0\n')
+        sys.exit(1)
+
+    encoded_chars = []
+    while num > 0:
+        remainder = num % 32
+        num //= 32
+        encoded_chars.append(CHARS[remainder])
+    return ''.join(encoded_chars[::-1])
+
+
+def decode(string):
+    string = clean(string)
+    num = 0
+    for power, char in enumerate(string[::-1]):
+        try:
+            val = CHARS.index(char)
+        except ValueError:
+            raise ValueError('invalid character: %s' % char)
+        num += 32 ** power * val
+    return num
+
+
+def clean(string):
+    # Hyphens are allowed:
+    string = string.replace('-', '')
+    # Case insensitive:
+    string = string.upper()
+    # Ambiguous chars:
+    string = string.replace('I', '1').replace('L', '1')
+    string = string.replace('O', '0')
+    return string
+
+
+def usage():
+    sys.stderr.write(str(__doc__))
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == '-h':
+        usage()
+        sys.exit(0)
+
+    if len(sys.argv) > 1 and sys.argv[1] == '-D':
+        print decode(sys.stdin.read().strip())
+    else:
+        print encode(int(sys.stdin.read()))

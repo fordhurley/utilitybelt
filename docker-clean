@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Based on http://mikehadlow.blogspot.co.uk/2014/04/docker-bulk-remove-images-and-containers.html
+
+remove_exited_containers() {
+  docker ps -a -q -f status=exited | xargs -n 1 -I {} docker rm {}
+}
+
+remove_untagged_images() {
+  local images=$(docker images --filter dangling=true -q)
+  if [[ -z $images ]]; then
+    echo "No images to remove"
+  else
+    docker rmi $images
+  fi
+}
+
+case "$1" in
+  "containers")
+    remove_exited_containers
+  ;;
+
+  "images")
+    remove_untagged_images
+  ;;
+
+  "all")
+    remove_exited_containers
+    remove_untagged_images
+  ;;
+
+  *)
+    echo "Usage: $0 COMMAND"
+    echo
+    echo "Available commands:"
+    echo "  containers: remove exited containers (data will be lost)"
+    echo "  images: remove untagged (or intermediate) images"
+    echo "  all"
+  ;;
+esac

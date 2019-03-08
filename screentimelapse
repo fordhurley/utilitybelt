@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -o nounset
+set -o errexit
+
+interval=30
+
+while true; do
+    filename=$(date +frame_%s.png)
+    screencapture $filename
+
+    # xargs trims the whitespace
+    total=$(ls -1f | grep 'frame_[[:digit:]]\+\.png' | wc -l | xargs)
+    echo "$filename (total: $total)"
+
+    sleep $interval
+done

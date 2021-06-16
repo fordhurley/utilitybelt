@@ -20,6 +20,8 @@ func main() {
 	switch cmd {
 	case "uint32":
 		fmt.Println(r.Uint32())
+	case "uuid":
+		fmt.Println(r.UUID())
 	default:
 		fmt.Fprintf(os.Stderr, "ERROR: unknown command %q\n", cmd)
 	}
@@ -29,10 +31,22 @@ type randy struct {
 	io.Reader
 }
 
-func (r randy) Uint32() uint32 {
+func (r randy) Uint32() *big.Int {
 	n, err := rand.Int(r, big.NewInt(math.MaxUint32))
 	if err != nil {
 		panic(err)
 	}
-	return uint32(n.Uint64())
+	return n
+}
+
+func (r randy) UUID() string {
+	bs := make([]byte, 16)
+	_, err := io.ReadFull(r, bs)
+	if err != nil {
+		panic(err)
+	}
+	bs[6] = (bs[6] & 0x0f) | 0x40 // version=4
+	bs[8] = (bs[8] & 0x3f) | 0x80 // variant=10
+
+	return fmt.Sprintf("%x-%x-%x-%x-%x", bs[:4], bs[4:6], bs[6:8], bs[8:10], bs[10:])
 }

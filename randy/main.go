@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math"
@@ -22,6 +23,8 @@ func main() {
 		fmt.Println(r.Uint32())
 	case "uuid":
 		fmt.Println(r.UUID())
+	case "token":
+		fmt.Println(r.Token())
 	default:
 		fmt.Fprintf(os.Stderr, "ERROR: unknown command %q\n", cmd)
 	}
@@ -49,4 +52,13 @@ func (r randy) UUID() string {
 	bs[8] = (bs[8] & 0x3f) | 0x80 // variant=10
 
 	return fmt.Sprintf("%x-%x-%x-%x-%x", bs[:4], bs[4:6], bs[6:8], bs[8:10], bs[10:])
+}
+
+func (r randy) Token() string {
+	bs := make([]byte, 48) // 48 bytes, base64 encoded => 64 character string
+	_, err := io.ReadFull(r, bs)
+	if err != nil {
+		panic(err)
+	}
+	return base64.URLEncoding.EncodeToString(bs)
 }
